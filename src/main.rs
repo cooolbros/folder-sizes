@@ -21,7 +21,7 @@ fn main() {
         })
         .map(|dir| {
             let name = dir.file_name().to_str().unwrap().to_owned();
-            let bytes = folder_size(dir.path());
+            let bytes = folder_size(dir.path()).unwrap_or_else(|| 0 as u128);
 
             let (index, unit) = UNITS
                 .iter()
@@ -70,16 +70,18 @@ fn main() {
     }
 }
 
-fn folder_size(path: PathBuf) -> u128 {
-    fs::read_dir(path)
-        .unwrap()
-        .filter_map(|res| res.ok())
-        .fold(0, |a: u128, entry: DirEntry| {
-            let metadata = entry.metadata().unwrap();
-            a + if metadata.is_dir() {
-                folder_size(entry.path())
-            } else {
-                metadata.len() as u128
-            }
-        })
+fn folder_size(path: PathBuf) -> Option<u128> {
+    Some(
+        fs::read_dir(path)
+            .ok()?
+            .filter_map(|res| res.ok())
+            .fold(0, |a: u128, entry: DirEntry| {
+                let metadata = entry.metadata().unwrap();
+                a + if metadata.is_dir() {
+                    folder_size(entry.path()).unwrap_or_else(|| 0 as u128)
+                } else {
+                    metadata.len() as u128
+                }
+            }),
+    )
 }
