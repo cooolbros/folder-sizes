@@ -21,7 +21,7 @@ fn main() {
         })
         .map(|dir| {
             let name = dir.file_name().to_str().unwrap().to_owned();
-            let bytes = folder_size(dir.path()).unwrap_or_else(|| 0 as u128);
+            let bytes = folder_size(dir.path()).unwrap_or(0_u128);
 
             let (index, unit) = UNITS
                 .iter()
@@ -46,10 +46,8 @@ fn main() {
         .fold(0, |a, b| cmp::max(a, b.size.len()));
 
     println!(
-        "| {0}{1} | {2}{3} |",
-        "Name",
+        "| Name{0} | Size{1} |",
         " ".repeat(name_max_width - "name".len()),
-        "Size",
         " ".repeat(size_max_width - "size".len())
     );
 
@@ -78,7 +76,7 @@ fn folder_size(path: PathBuf) -> Option<u128> {
             .fold(0, |a: u128, entry: DirEntry| {
                 let metadata = entry.metadata().unwrap();
                 a + if metadata.is_dir() {
-                    folder_size(entry.path()).unwrap_or_else(|| 0 as u128)
+                    folder_size(entry.path()).unwrap_or(0_u128)
                 } else {
                     metadata.len() as u128
                 }
